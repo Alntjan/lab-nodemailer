@@ -1,4 +1,6 @@
-const { Router } = require('express');
+const {
+  Router
+} = require('express');
 const router = new Router();
 
 const User = require('./../models/user');
@@ -8,23 +10,58 @@ router.get('/', (req, res, next) => {
   res.render('index');
 });
 
+/*
+router.get('/confirm/:confirmCode', (req, res, next) => {
+  console.log(req.params);
+  res.render('index');
+});
+*/
+
+router.get('/confirm/:confirmCode', (req, res, next) => {
+  User.findOneAndUpdate({
+    confirmationCode: req.params.confirmCode
+  }, {
+    status: 'Active'
+  }).then(user => {
+    res.render('confirmation');
+  }).catch(error => {
+    next(error);
+  })
+});
+
 router.get('/sign-up', (req, res, next) => {
   res.render('sign-up');
 });
 
+
 router.post('/sign-up', (req, res, next) => {
-  const { name, email, password } = req.body;
+  let cCode;
+  const {
+    username,
+    email,
+    password
+  } = req.body;
+
+  bcryptjs.hash(email, 10).then(hash => {
+    cCode = hash.replace(/(\/)+/g, ".");
+  }).catch(error => {
+    next(error);
+  });
+
   bcryptjs
     .hash(password, 10)
     .then(hash => {
       return User.create({
-        name,
+        username,
         email,
-        passwordHash: hash
+        passwordHash: hash,
+        confirmationCode: cCode
       });
     })
     .then(user => {
       req.session.user = user._id;
+      user.sendConfirmationEmail();
+    }).then(document => {
       res.redirect('/');
     })
     .catch(error => {
@@ -38,8 +75,13 @@ router.get('/sign-in', (req, res, next) => {
 
 router.post('/sign-in', (req, res, next) => {
   let userId;
-  const { email, password } = req.body;
-  User.findOne({ email })
+  const {
+    email,
+    password
+  } = req.body;
+  User.findOne({
+      email
+    })
     .then(user => {
       if (!user) {
         return Promise.reject(new Error("There's no user with that email."));

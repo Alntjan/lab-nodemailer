@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
-  name: {
+  username: {
     type: String,
     required: true,
     trim: true
@@ -28,6 +28,30 @@ const userSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
+
+// assign a function to the "methods" object of our animalSchema
+userSchema.methods.sendConfirmationEmail = function (callback) {
+  const nodemailer = require("nodemailer");
+  const EMAIL = 'ih174test@gmail.com';
+  const PASSWORD = 'IH174@lis';
+  const transporter = nodemailer.createTransport({
+    service: "Gmail",
+    auth: {
+      user: EMAIL,
+      pass: PASSWORD
+    }
+  });
+  return transporter.sendMail({
+    from: `${this.email}`,
+    to: EMAIL,
+    subject: "Account Confirmation Email",
+    html: `
+        <h1 style="color: green">Hello ${this.username}!</h1>
+        <a href="http://localhost:3000/auth/confirm/${this.confirmationCode}">Verify your email here.</a>
+      `
+  }, callback);
+};
+
 
 const User = mongoose.model('User', userSchema);
 

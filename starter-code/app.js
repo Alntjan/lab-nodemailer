@@ -1,4 +1,6 @@
-const { join } = require('path');
+const {
+  join
+} = require('path');
 const express = require('express');
 const logger = require('morgan');
 const sassMiddleware = require('node-sass-middleware');
@@ -21,13 +23,14 @@ app.set('view engine', 'hbs');
 
 app.use(logger('dev'));
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({
+  extended: false
+}));
 app.use(
   sassMiddleware({
     src: join(__dirname, 'public'),
     dest: join(__dirname, 'public'),
-    outputStyle:
-      process.env.NODE_ENV === 'development' ? 'nested' : 'compressed',
+    outputStyle: process.env.NODE_ENV === 'development' ? 'nested' : 'compressed',
     sourceMap: false,
     force: true
   })
@@ -82,7 +85,9 @@ app.use('*', (req, res, next) => {
 
 app.use((error, req, res, next) => {
   res.status(error.status || 400);
-  res.render('error', { error });
+  res.render('error', {
+    error
+  });
 });
 
 module.exports = app;
